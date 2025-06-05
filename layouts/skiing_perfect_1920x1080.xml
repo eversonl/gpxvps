@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<layout>
+    <!-- Perfect skiing layout for 1920x1080 with working map -->
+    
+    <!-- Speed widget - top left -->
+    <widget x="50" y="50" width="220" height="60" position="left" align="vertical">
+        <type>speed</type>
+        <n>SPEED</n>
+        <margin>10</margin>
+        <padding>5</padding>
+        <unit>kph</unit>
+        <text-shadow>3</text-shadow>
+        <border>2</border>
+        <border-color>#000000b0</border-color>
+        <background-color>#0000004c</background-color>
+    </widget>
+
+    <!-- Elevation widget - below speed -->
+    <widget x="50" y="130" width="220" height="60" position="left" align="vertical">
+        <type>elevation</type>
+        <n>ELEVATION</n>
+        <margin>10</margin>
+        <padding>5</padding>
+        <unit>m</unit>
+        <text-shadow>3</text-shadow>
+        <border>2</border>
+        <border-color>#000000b0</border-color>
+        <background-color>#0000004c</background-color>
+    </widget>
+
+    <!-- Time widget - top right -->
+    <widget x="1650" y="50" width="220" height="60" position="right" align="vertical">
+        <type>time</type>
+        <n>TIME</n>
+        <margin>10</margin>
+        <padding>5</padding>
+        <text-shadow>3</text-shadow>
+        <border>2</border>
+        <border-color>#000000b0</border-color>
+        <background-color>#0000004c</background-color>
+    </widget>
+
+    <!-- Distance widget - below elevation -->
+    <widget x="50" y="210" width="220" height="60" position="left" align="vertical">
+        <type>distance</type>
+        <n>DISTANCE</n>
+        <margin>10</margin>
+        <padding>5</padding>
+        <unit>km</unit>
+        <text-shadow>3</text-shadow>
+        <border>2</border>
+        <border-color>#000000b0</border-color>
+        <background-color>#0000004c</background-color>
+    </widget>
+
+    <!-- Map - perfectly positioned and styled for skiing - FIXED to use relative positioning -->
+    <map position="bottom-right" display="true">
+        <source>6</source>  <!-- OpenTopoMap - best for skiing/terrain -->
+        <zoom>13</zoom>
+        <factor>1.8</factor>
+        <margin>20</margin>
+        <border>3</border>
+        <border-color>#000000cc</border-color>
+        <background-color>#ffffff88</background-color>
+        <path-thick>4.0</path-thick>
+        <path-border>2.0</path-border>
+    </map>
+</layout>

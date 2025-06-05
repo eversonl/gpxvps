@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<layout>
+    <!-- Skiing layout for 1280x720 (HD) with scaled fonts -->
+    
+    <!-- Speed widget - smaller for 720p -->
+    <widget x="20" y="35" width="160" height="40" position="left" align="vertical">
+        <type>speed</type>
+        <n>SPEED</n>
+        <margin>12</margin>
+        <padding>6</padding>
+        <unit>kph</unit>
+        <text-shadow>2</text-shadow>
+        <border>2</border>
+        <border-color>#000000b0</border-color>
+        <background-color>#0000004c</background-color>
+        <font-size>18</font-size>
+        <text-linespace>2</text-linespace>
+    </widget>
+
+    <!-- Elevation widget -->
+    <widget x="20" y="35" width="160" height="40" position="left" align="vertical">
+        <type>elevation</type>
+        <n>ELEVATION</n>
+        <margin>12</margin>
+        <padding>6</padding>
+        <unit>m</unit>
+        <text-shadow>2</text-shadow>
+        <border>2</border>
+        <border-color>#000000b0</border-color>
+        <background-color>#0000004c</background-color>
+        <font-size>18</font-size>
+        <text-linespace>2</text-linespace>
+    </widget>
+
+    <!-- Time widget -->
+    <widget x="20" y="20" width="160" height="35" position="right" align="vertical">
+        <type>time</type>
+        <n>TIME</n>
+        <margin>12</margin>
+        <padding>6</padding>
+        <text-shadow>2</text-shadow>
+        <border>2</border>
+        <border-color>#000000b0</border-color>
+        <background-color>#0000004c</background-color>
+        <font-size>16</font-size>
+        <text-linespace>2</text-linespace>
+    </widget>
+
+    <!-- Distance widget -->
+    <widget x="20" y="35" width="160" height="35" position="bottom" align="horizontal">
+        <type>distance</type>
+        <n>DISTANCE</n>
+        <margin>12</margin>
+        <padding>6</padding>
+        <unit>km</unit>
+        <text-shadow>2</text-shadow>
+        <border>2</border>
+        <border-color>#000000b0</border-color>
+        <background-color>#0000004c</background-color>
+        <font-size>16</font-size>
+        <text-linespace>2</text-linespace>
+    </widget>
+
+    <!-- Map scaled for 720p -->
+    <map position="top-right" display="true">
+        <source>6</source>
+        <zoom>13</zoom>
+        <factor>1.6</factor>
+        <margin>20</margin>
+        <border>2</border>
+        <border-color>#000000cc</border-color>
+        <background-color>#ffffff88</background-color>
+        <path-thick>4.0</path-thick>
+        <path-border>2.0</path-border>
+    </map>
+</layout>

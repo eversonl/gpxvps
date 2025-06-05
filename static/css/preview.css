@@ -1,0 +1,121 @@
+/* Visual Layout Preview Styles */
+.layout-preview {
+    background: #f0f0f0;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    margin-top: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.preview-video {
+    background: linear-gradient(135deg, #87CEEB 0%, #98FB98 50%, #F0E68C 100%);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.preview-widget {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(0, 0, 0, 0.7);
+    border-radius: 4px;
+    color: white;
+    padding: 8px;
+    font-size: 12px;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    cursor: move;
+    user-select: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    box-sizing: border-box;
+}
+
+.preview-widget:hover {
+    border-color: #667eea;
+    background: rgba(102, 126, 234, 0.4);
+}
+
+.preview-widget.selected {
+    border-color: #667eea;
+    background: rgba(102, 126, 234, 0.5);
+    box-shadow: 0 0 10px rgba(102, 126, 234, 0.6);
+}
+
+.preview-map {
+    background: rgba(34, 139, 34, 0.3);
+    border: 2px solid rgba(34, 139, 34, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #228B22;
+    font-weight: bold;
+}
+
+.preview-map:hover {
+    border-color: #32CD32;
+    background: rgba(50, 205, 50, 0.4);
+}
+
+.widget-controls-panel {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 15px;
+    border: 1px solid #dee2e6;
+    display: none;
+}
+
+.widget-controls-panel.active {
+    display: block;
+}
+
+.control-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 10px;
+    align-items: center;
+}
+
+.control-row label {
+    min-width: 80px;
+    margin-bottom: 0;
+}
+
+.control-row input {
+    flex: 1;
+    max-width: 100px;
+}
+
+.scale-info {
+    background: #e3f2fd;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    border-left: 4px solid #2196f3;
+    font-size: 12px;
+}
+
+.preview-container {
+    position: relative;
+}
+
+.resolution-display {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+}

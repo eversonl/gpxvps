@@ -1,0 +1,438 @@
+ 'error');
+                return;
+            }
+
+            fetch(`/get_layout_content?filename=${encodeURIComponent(selectedLayout)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        parseLayoutToForm(data.content);
+                        switchTab('generator');
+                        showStatus('Layout loaded in generator for editing', 'success');
+                    } else {
+                        showStatus(`Error loading layout: ${data.error}`, 'error');
+                    }
+                })
+                .catch(error => {
+                    showStatus(`Error loading layout: ${error.message}`, 'error');
+                });
+        }
+
+        // Parse XML layout and populate form fields
+        function parseLayoutToForm(xmlContent) {
+            try {
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlContent, "text/xml");
+                
+                // Parse map settings
+                const mapElement = xmlDoc.querySelector('map');
+                if (mapElement) {
+                    const source = mapElement.querySelector('source');
+                    const zoom = mapElement.querySelector('zoom');
+                    const factor = mapElement.querySelector('factor');
+                    const width = mapElement.getAttribute('width');
+                    const height = mapElement.getAttribute('height');
+                    const position = mapElement.getAttribute('position');
+                    
+                    if (source) document.getElementById('mapSource').value = source.textContent;
+                    if (zoom) document.getElementById('mapZoom').value = zoom.textContent;
+                    if (factor) document.getElementById('mapFactor').value = factor.textContent;
+                    if (width) document.getElementById('mapWidth').value = width;
+                    if (height) document.getElementById('mapHeight').value = height;
+                    if (position) document.getElementById('mapPosition').value = position;
+                }
+                
+                // Parse speed widget
+                const speedWidget = Array.from(xmlDoc.querySelectorAll('widget')).find(w => {
+                    const type = w.querySelector('type');
+                    return type && type.textContent === 'speed';
+                });
+                
+                if (speedWidget) {
+                    const unit = speedWidget.querySelector('unit');
+                    const width = speedWidget.getAttribute('width');
+                    const height = speedWidget.getAttribute('height');
+                    const position = speedWidget.getAttribute('position');
+                    
+                    if (unit) document.getElementById('speedUnit').value = unit.textContent;
+                    if (width) document.getElementById('speedWidth').value = width;
+                    if (height) document.getElementById('speedHeight').value = height;
+                    if (position) document.getElementById('speedPosition').value = position;
+                }
+                
+                // Check which widgets are present
+                const widgets = Array.from(xmlDoc.querySelectorAll('widget')).map(w => {
+                    const type = w.querySelector('type');
+                    return type ? type.textContent : null;
+                }).filter(Boolean);
+                
+                document.getElementById('includeElevation').checked = widgets.includes('elevation');
+                document.getElementById('includeTime').checked = widgets.includes('time');
+                document.getElementById('includeDistance').checked = widgets.includes('distance');
+                document.getElementById('includeHeartRate').checked = widgets.includes('heartrate');
+                document.getElementById('includeMaxSpeed').checked = widgets.includes('maxspeed');
+                document.getElementById('includeAvgSpeed').checked = widgets.includes('avgspeed');
+                
+            } catch (error) {
+                console.error('Error parsing layout:', error);
+                showStatus('Error parsing layout XML', 'error');
+            }
+        }
+
+        // Update current layout display
+        function updateCurrentLayout(layoutName) {
+            if (layoutName) {
+                document.getElementById('current-layout').style.display = 'block';
+                document.getElementById('layout-name').textContent = layoutName;
+            } else {
+                document.getElementById('current-layout').style.display = 'none';
+            }
+        }
+
+        // Get video creation time
+        function getVideoTime(filename) {
+            if (!filename) return;
+            
+            fetch(`/get_video_time?filename=${encodeURIComponent(filename)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.creation_time) {
+                        // Now includes seconds for proper gpx2video compatibility
+                        document.getElementById('start_time').value = data.creation_time;
+                        showStatus('Auto-filled start time from video metadata (with seconds)', 'success');
+                    } else if (data.error) {
+                        showStatus('Could not get video creation time: ' + data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error getting video time:', error);
+                    showStatus('Error getting video time: ' + error.message, 'error');
+                });
+        }
+
+        // Show status messages
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = 'status ' + type;
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusDiv.textContent = '';
+                    statusDiv.className = '';
+                }, 5000);
+            }
+        }
+
+        // Event listeners
+        document.getElementById('mp4').addEventListener('change', function() {
+            if (this.value) {
+                document.getElementById('video_file').value = '';
+                getVideoTime(this.value);
+            }
+        });
+
+        document.getElementById('video_file').addEventListener('change', function() {
+            if (this.files.length > 0) {
+                document.getElementById('mp4').value = '';
+            }
+        });
+
+        document.getElementById('gpx').addEventListener('change', function() {
+            if (this.value) {
+                document.getElementById('gpx_file').value = '';
+            }
+        });
+
+        document.getElementById('gpx_file').addEventListener('change', function() {
+            if (this.files.length > 0) {
+                document.getElementById('gpx').value = '';
+            }
+        });
+
+        document.getElementById('layout').addEventListener('change', function() {
+            updateCurrentLayout(this.value);
+        });
+
+        document.getElementById('autoFillTime').addEventListener('click', function() {
+            const selectedFile = document.getElementById('mp4').value;
+            const uploadedFile = document.getElementById('video_file').files[0];
+            
+            if (selectedFile) {
+                getVideoTime(selectedFile);
+            } else if (uploadedFile) {
+                showStatus('Auto-fill only works with existing files. Please upload the file first, then select it from the dropdown.', 'error');
+            } else {
+                showStatus('Please select an existing video file first', 'error');
+            }
+        });
+
+        // Form submission
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            const videoFile = document.getElementById('video_file').files[0];
+            const videoSelect = document.getElementById('mp4').value;
+            const gpxFile = document.getElementById('gpx_file').files[0];
+            const gpxSelect = document.getElementById('gpx').value;
+            const layout = document.getElementById('layout').value;
+
+            // Validation
+            if (!videoFile && !videoSelect) {
+                e.preventDefault();
+                showStatus('Please select or upload a video file', 'error');
+                return;
+            }
+
+            if (!gpxFile && !gpxSelect) {
+                e.preventDefault();
+                showStatus('Please select or upload a GPX file', 'error');
+                return;
+            }
+
+            if (!layout) {
+                e.preventDefault();
+                showStatus('Please select a layout', 'error');
+                return;
+            }
+
+            showStatus('Processing video... This may take a while.', 'success');
+        });
+
+        // Auto-generate layout when inputs change
+        document.addEventListener('change', function(e) {
+            if (e.target.closest('#generator-content') && currentGeneratedLayout) {
+                setTimeout(generateLayout, 100);
+            }
+        });
+
+        // Load files when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFiles();
+            generateLayout(); // Generate initial layout
+        });
+    </script>
+</body>
+</html>                            <small>This should match a timestamp from your GPX file when the video recording started</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="offset">Offset (ms):</label>
+                            <input type="number" name="offset" id="offset" value="0">
+                            <small>If your video starts after the GPX timestamp, enter the difference in milliseconds</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="telemetry_method">Telemetry Method:</label>
+                            <select name="telemetry_method" id="telemetry_method">
+                                <option value="">Default</option>
+                                <option value="1">Sample</option>
+                                <option value="2">Linear</option>
+                                <option value="3">Interpolate</option>
+                                <option value="4">Kalman</option>
+                            </select>
+                            <small>Use method 2 or 3 to fix speed calculation issues</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="telemetry_rate">Telemetry Rate (ms):</label>
+                            <input type="number" name="telemetry_rate" id="telemetry_rate" value="1000" min="20" max="5000">
+                            <small>Lower values = smoother interpolation (500-1000ms recommended)</small>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 18px; padding: 15px;">
+                    🚀 Generate Video
+                </button>
+            </form>
+
+            <div id="status"></div>
+        </div>
+
+        <!-- Layout Generator Tab -->
+        <div class="tab-content" id="generator-content">
+            <div class="form-grid">
+                <!-- Map Configuration -->
+                <div class="form-section">
+                    <h2>🗺️ Map Configuration</h2>
+                    
+                    <div class="form-group">
+                        <label for="mapSource">Map Source</label>
+                        <select id="mapSource">
+                            <option value="0">None</option>
+                            <option value="1" selected>OpenStreetMap</option>
+                            <option value="4">Maps-For-Free</option>
+                            <option value="5">OpenCycleMap</option>
+                            <option value="6">OpenTopoMap</option>
+                            <option value="7">Public Transport Maps</option>
+                            <option value="8">Google Maps</option>
+                            <option value="9">Google Satellite</option>
+                            <option value="10">Google Hybrid</option>
+                            <option value="11">Virtual Earth Map</option>
+                            <option value="12">Virtual Earth Satellite</option>
+                            <option value="13">Virtual Earth Hybrid</option>
+                            <option value="15">IGN Essentiel Map</option>
+                            <option value="16">IGN Essentiel Photo</option>
+                        </select>
+                        <small>OpenTopoMap (6) recommended for skiing/snowboarding</small>
+                    </div>
+
+                    <div class="widget-controls">
+                        <div class="form-group">
+                            <label for="mapZoom">Zoom Level</label>
+                            <input type="number" id="mapZoom" value="12" min="1" max="18">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="mapFactor">Scale Factor</label>
+                            <input type="number" id="mapFactor" value="2.0" step="0.1" min="0.5" max="5.0">
+                        </div>
+                    </div>
+
+                    <div class="widget-controls">
+                        <div class="form-group">
+                            <label for="mapWidth">Width (px)</label>
+                            <input type="number" id="mapWidth" value="640" min="100" max="1920">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="mapHeight">Height (px)</label>
+                            <input type="number" id="mapHeight" value="480" min="100" max="1080">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="mapPosition">Position</label>
+                        <select id="mapPosition">
+                            <option value="none">Custom (x,y)</option>
+                            <option value="top-left">Top Left</option>
+                            <option value="top-right">Top Right</option>
+                            <option value="bottom-left">Bottom Left</option>
+                            <option value="bottom-right">Bottom Right</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Speed Widget Configuration -->
+                <div class="form-section">
+                    <h2>⚡ Speed Widget</h2>
+                    
+                    <div class="form-group">
+                        <label for="speedUnit">Unit</label>
+                        <select id="speedUnit">
+                            <option value="kph">km/h</option>
+                            <option value="mph">mph</option>
+                        </select>
+                    </div>
+
+                    <div class="widget-controls">
+                        <div class="form-group">
+                            <label for="speedWidth">Width (px)</label>
+                            <input type="number" id="speedWidth" value="220" min="100" max="500">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="speedHeight">Height (px)</label>
+                            <input type="number" id="speedHeight" value="60" min="30" max="150">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="speedPosition">Position</label>
+                        <select id="speedPosition">
+                            <option value="left">Left</option>
+                            <option value="right">Right</option>
+                            <option value="top-left">Top Left</option>
+                            <option value="top-right">Top Right</option>
+                            <option value="bottom-left">Bottom Left</option>
+                            <option value="bottom-right">Bottom Right</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Additional Widgets -->
+                <div class="form-section">
+                    <h2>📊 Additional Widgets</h2>
+                    
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="includeElevation" checked>
+                        <label for="includeElevation">Elevation Widget</label>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="includeTime" checked>
+                        <label for="includeTime">Time Widget</label>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="includeDistance">
+                        <label for="includeDistance">Distance Widget</label>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="includeHeartRate">
+                        <label for="includeHeartRate">Heart Rate Widget</label>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="includeMaxSpeed">
+                        <label for="includeMaxSpeed">Max Speed Widget</label>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="includeAvgSpeed">
+                        <label for="includeAvgSpeed">Average Speed Widget</label>
+                    </div>
+                </div>
+
+                <!-- Activity Type -->
+                <div class="form-section">
+                    <h2>🏃 Activity Type</h2>
+                    
+                    <div class="form-group">
+                        <label for="activityType">Activity</label>
+                        <select id="activityType">
+                            <option value="cycling">🚴 Cycling</option>
+                            <option value="running">🏃 Running</option>
+                            <option value="skiing" selected>⛷️ Skiing/Snowboarding</option>
+                            <option value="hiking">🥾 Hiking</option>
+                            <option value="driving">🚗 Driving</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="videoResolution">Video Resolution</label>
+                        <select id="videoResolution">
+                            <option value="1920x1080" selected>1920x1080 (Full HD)</option>
+                            <option value="1280x720">1280x720 (HD)</option>
+                            <option value="3840x2160">3840x2160 (4K)</option>
+                            <option value="2560x1440">2560x1440 (2K)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="layoutName">Layout Name</label>
+                        <input type="text" id="layoutName" placeholder="my_custom_layout" value="">
+                        <small>Name for saving your custom layout</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="layout-actions">
+                <button class="btn btn-primary" onclick="generateLayout()">🎨 Generate Layout Preview</button>
+                <button class="btn btn-secondary" onclick="saveLayout()" id="saveLayoutBtn" style="display: none;">💾 Save Layout</button>
+                <button class="btn btn-outline" onclick="useLayoutForProcessing()" id="useLayoutBtn" style="display: none;">✅ Use This Layout</button>
+            </div>
+
+            <!-- Preview Section -->
+            <div class="preview-section">
+                <h2>📄 Generated Layout XML</h2>
+                <div class="xml-output" id="xmlOutput">
+                    Click "Generate Layout Preview" to see the configuration...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

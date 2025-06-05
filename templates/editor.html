@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPX2Video - WYSIWYG Layout Editor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/editor.css') }}">
+</head>
+<body>
+    <div class="editor-container">
+        <!-- Header -->
+        <div class="editor-header">
+            <h1>🎨 WYSIWYG Layout Editor</h1>
+            <div class="editor-actions">
+                <button class="btn btn-outline" onclick="newLayout()">📝 New Layout</button>
+                <button class="btn btn-outline" onclick="loadLayout()">📁 Load Layout</button>
+                <button class="btn btn-primary" onclick="saveLayout()">💾 Save Layout</button>
+                <button class="btn btn-secondary" onclick="exportXML()">📤 Export XML</button>
+                <a href="/" class="btn btn-outline">← Back to Main</a>
+            </div>
+        </div>
+
+        <!-- Main Editor -->
+        <div class="editor-main">
+            <!-- Left Panel - Widget Palette -->
+            <div class="editor-panel left-panel">
+                <h3>🧱 Widget Palette</h3>
+                
+                <div class="widget-category">
+                    <h4>📊 Data Widgets</h4>
+                    <div id="widget-palette" class="widget-palette">
+                        <!-- Widgets will be loaded dynamically -->
+                    </div>
+                </div>
+
+                <div class="widget-category">
+                    <h4>🗺️ Map</h4>
+                    <div class="map-palette">
+                        <div class="palette-item map-item" draggable="true" data-type="map">
+                            <span class="widget-icon">🗺️</span>
+                            <span class="widget-name">Map</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="video-settings">
+                    <h4>📺 Video Settings</h4>
+                    <div class="form-group">
+                        <label for="canvas-resolution">Resolution:</label>
+                        <select id="canvas-resolution" onchange="changeCanvasResolution()">
+                            <option value="1920x1080">1920x1080 (Full HD)</option>
+                            <option value="1280x720">1280x720 (HD)</option>
+                            <option value="3840x2160">3840x2160 (4K)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center - Canvas -->
+            <div class="canvas-container">
+                <div class="canvas-header">
+                    <h3>🎯 Layout Canvas</h3>
+                    <div class="canvas-info">
+                        <span id="canvas-info">1920 × 1080</span>
+                        <span class="zoom-controls">
+                            <button onclick="zoomCanvas(0.8)">🔍-</button>
+                            <span id="zoom-level">100%</span>
+                            <button onclick="zoomCanvas(1.25)">🔍+</button>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Canvas -->
+                <div class="canvas" id="canvas">
+                    <div class="canvas-background">
+                        <!-- Position Guide Overlay -->
+                        <div class="position-guide" id="position-guide">
+                            <div class="guide-zone top-left" data-position="top-left">
+                                <span class="zone-label">Top Left</span>
+                            </div>
+                            <div class="guide-zone top-center" data-position="top">
+                                <span class="zone-label">Top</span>
+                            </div>
+                            <div class="guide-zone top-right" data-position="top-right">
+                                <span class="zone-label">Top Right</span>
+                            </div>
+                            <div class="guide-zone middle-left" data-position="left">
+                                <span class="zone-label">Left</span>
+                            </div>
+                            <div class="guide-zone middle-center" data-position="center">
+                                <span class="zone-label">Center</span>
+                            </div>
+                            <div class="guide-zone middle-right" data-position="right">
+                                <span class="zone-label">Right</span>
+                            </div>
+                            <div class="guide-zone bottom-left" data-position="bottom-left">
+                                <span class="zone-label">Bottom Left</span>
+                            </div>
+                            <div class="guide-zone bottom-center" data-position="bottom">
+                                <span class="zone-label">Bottom</span>
+                            </div>
+                            <div class="guide-zone bottom-right" data-position="bottom-right">
+                                <span class="zone-label">Bottom Right</span>
+                            </div>
+                        </div>
+                        
+                        <div class="aspect-ratio-indicator">Video Preview Area</div>
+                    </div>
+                    <!-- Widgets and map will be added here dynamically -->
+                </div>
+            </div>
+
+            <!-- Right Panel - Properties -->
+            <div class="editor-panel right-panel">
+                <h3>⚙️ Properties</h3>
+                
+                <div id="properties-panel">
+                    <div class="no-selection">
+                        <p>Select a widget or map to edit its properties</p>
+                        <div class="quick-actions">
+                            <button class="btn btn-outline" onclick="clearCanvas()">🗑️ Clear All</button>
+                            <button class="btn btn-outline" onclick="toggleGrid()">📐 Toggle Grid</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Widget Properties Template -->
+                <div id="widget-properties-template" class="properties-form" style="display: none;">
+                    <h4>Widget Properties</h4>
+                    
+                    <div class="form-group">
+                        <label for="widget-type">Type:</label>
+                        <select id="widget-type" onchange="updateWidgetProperty('type', this.value)">
+                            <!-- Options loaded dynamically -->
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="widget-label">Display Name:</label>
+                        <input type="text" id="widget-label" onchange="updateWidgetProperty('label', this.value)" placeholder="e.g. SPEED, VITESSE, 速度">
+                        <small>This text appears on the video overlay (supports any language)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="widget-unit">Unit:</label>
+                        <select id="widget-unit" onchange="updateWidgetProperty('unit', this.value)">
+                            <!-- Options loaded dynamically -->
+                        </select>
+                    </div>
+
+                    <div class="property-section">
+                        <h5>📍 Position</h5>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="widget-x">X:</label>
+                                <input type="number" id="widget-x" onchange="updateWidgetPosition()" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="widget-y">Y:</label>
+                                <input type="number" id="widget-y" onchange="updateWidgetPosition()" min="0">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="widget-width">Width:</label>
+                                <input type="number" id="widget-width" onchange="updateWidgetSize()" min="50">
+                            </div>
+                            <div class="form-group">
+                                <label for="widget-height">Height:</label>
+                                <input type="number" id="widget-height" onchange="updateWidgetSize()" min="20">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="property-section">
+                        <h5>🎨 Styling</h5>
+                        <div class="form-group">
+                            <label for="widget-bg-color">Background:</label>
+                            <input type="color" id="widget-bg-color" onchange="updateWidgetProperty('background_color', this.value + '4c')">
+                            <input type="range" id="widget-bg-opacity" min="0" max="255" value="76" onchange="updateBackgroundOpacity(this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label for="widget-border-color">Border:</label>
+                            <input type="color" id="widget-border-color" onchange="updateWidgetProperty('border_color', this.value + 'b0')">
+                            <input type="number" id="widget-border-width" min="0" max="10" value="2" onchange="updateWidgetProperty('border', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label for="widget-text-color">Text Color:</label>
+                            <input type="color" id="widget-text-color" onchange="updateWidgetProperty('text_color', this.value + 'ff')">
+                        </div>
+                        <div class="form-group">
+                            <label for="widget-margin">Margin:</label>
+                            <input type="number" id="widget-margin" min="0" max="50" value="10" onchange="updateWidgetProperty('margin', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label for="widget-padding">Padding:</label>
+                            <input type="number" id="widget-padding" min="0" max="20" value="5" onchange="updateWidgetProperty('padding', this.value)">
+                        </div>
+                    </div>
+
+                    <div class="property-section">
+                        <h5>🔤 Typography</h5>
+                        <div class="form-group">
+                            <label for="widget-font-size">Font Size:</label>
+                            <input type="number" id="widget-font-size" min="8" max="72" onchange="updateWidgetProperty('font_size', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label for="widget-text-ratio">Text Scale:</label>
+                            <input type="number" id="widget-text-ratio" min="0.5" max="5.0" step="0.1" value="2.0" onchange="updateWidgetProperty('text_ratio', this.value)">
+                            <small>Scale factor for text size</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="widget-text-shadow">Text Shadow:</label>
+                            <input type="number" id="widget-text-shadow" min="0" max="10" value="3" onchange="updateWidgetProperty('text_shadow', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label for="widget-text-linespace">Line Spacing:</label>
+                            <input type="number" id="widget-text-linespace" min="1" max="10" value="2" onchange="updateWidgetProperty('text_linespace', this.value)">
+                        </div>
+                    </div>
+
+                    <div class="property-section">
+                        <h5>📐 Layout</h5>
+                        <div class="form-group">
+                            <label for="widget-label-align">Label Align:</label>
+                            <select id="widget-label-align" onchange="updateWidgetProperty('label_align', this.value)">
+                                <option value="left">Left</option>
+                                <option value="center">Center</option>
+                                <option value="right">Right</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="widget-value-align">Value Align:</label>
+                            <select id="widget-value-align" onchange="updateWidgetProperty('value_align', this.value)">
+                                <option value="left">Left</option>
+                                <option value="center">Center</option>
+                                <option value="right">Right</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="property-section">
+                        <h5>⏱️ Timing</h5>
+                        <div class="form-group">
+                            <label for="widget-at">Start Time (ms):</label>
+                            <input type="number" id="widget-at" min="0" value="1000" onchange="updateWidgetProperty('at', this.value)">
+                            <small>When widget appears in video</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="widget-duration">Duration (ms):</label>
+                            <input type="number" id="widget-duration" min="1000" value="9000" onchange="updateWidgetProperty('duration', this.value)">
+                            <small>How long widget stays visible</small>
+                        </div>
+                    </div>
+
+                    <div class="property-section">
+                        <h5>👁️ Display Options</h5>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="widget-with-label" checked onchange="updateWidgetProperty('with_label', this.checked)">
+                                Show Label
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="widget-with-value" checked onchange="updateWidgetProperty('with_value', this.checked)">
+                                Show Value
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="widget-with-unit" checked onchange="updateWidgetProperty('with_unit', this.checked)">
+                                Show Unit
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="widget-with-picto" checked onchange="updateWidgetProperty('with_picto', this.checked)">
+                                Show Icon
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="widget-display" checked onchange="updateWidgetProperty('display', this.checked)">
+                                Widget Visible
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="property-actions">
+                        <button class="btn btn-danger" onclick="deleteSelectedElement()">🗑️ Delete</button>
+                        <button class="btn btn-outline" onclick="duplicateSelectedElement()">📋 Duplicate</button>
+                    </div>
+                </div>
+
+                <!-- Map Properties Template -->
+                <div id="map-properties-template" class="properties-form" style="display: none;">
+                    <h4>Map Properties</h4>
+                    
+                    <div class="form-group">
+                        <label for="map-source">Map Source:</label>
+                        <select id="map-source" onchange="updateMapProperty('source', this.value)">
+                            <!-- Options loaded dynamically -->
+                        </select>
+                    </div>
+
+                    <div class="property-section">
+                        <h5>📍 Position & Size</h5>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="map-x">X:</label>
+                                <input type="number" id="map-x" onchange="updateMapPosition()" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="map-y">Y:</label>
+                                <input type="number" id="map-y" onchange="updateMapPosition()" min="0">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="map-width">Width:</label>
+                                <input type="number" id="map-width" onchange="updateMapSize()" min="100">
+                            </div>
+                            <div class="form-group">
+                                <label for="map-height">Height:</label>
+                                <input type="number" id="map-height" onchange="updateMapSize()" min="100">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="property-section">
+                        <h5>🗺️ Map Settings</h5>
+                        <div class="form-group">
+                            <label for="map-zoom">Zoom Level:</label>
+                            <input type="number" id="map-zoom" min="1" max="20" value="13" onchange="updateMapProperty('zoom', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label for="map-factor">Scale Factor:</label>
+                            <input type="number" id="map-factor" min="0.5" max="5.0" step="0.1" value="2.0" onchange="updateMapProperty('factor', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label for="map-margin">Margin:</label>
+                            <input type="number" id="map-margin" min="0" max="100" value="20" onchange="updateMapProperty('margin', this.value)">
+                        </div>
+                    </div>
+
+                    <div class="property-section">
+                        <h5>🎨 Map Styling</h5>
+                        <div class="form-group">
+                            <label for="map-border-color">Border Color:</label>
+                            <input type="color" id="map-border-color" onchange="updateMapProperty('border_color', this.value + 'cc')">
+                            <input type="number" id="map-border-width" min="0" max="10" value="3" onchange="updateMapProperty('border', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label for="map-bg-color">Background:</label>
+                            <input type="color" id="map-bg-color" onchange="updateMapProperty('background_color', this.value + '88')">
+                        </div>
+                        <div class="form-group">
+                            <label for="map-path-thick">Path Thickness:</label>
+                            <input type="number" id="map-path-thick" min="1" max="10" step="0.5" value="4.0" onchange="updateMapProperty('path_thick', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label for="map-path-border">Path Border:</label>
+                            <input type="number" id="map-path-border" min="0" max="5" step="0.5" value="2.0" onchange="updateMapProperty('path_border', this.value)">
+                        </div>
+                    </div>
+
+                    <div class="property-actions">
+                        <button class="btn btn-danger" onclick="deleteSelectedElement()">🗑️ Delete</button>
+                        <button class="btn btn-outline" onclick="duplicateSelectedElement()">📋 Duplicate</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    
+    <!-- Save Layout Modal -->
+    <div id="save-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>💾 Save Layout</h3>
+                <span class="close" onclick="closeSaveModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="layout-name">Layout Name:</label>
+                    <input type="text" id="layout-name" placeholder="My Custom Layout" required>
+                </div>
+                <div class="form-group">
+                    <small>The layout will be saved as an XML file that can be used with gpx2video.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeSaveModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmSaveLayout()">Save Layout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Layout Modal -->
+    <div id="load-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📁 Load Layout</h3>
+                <span class="close" onclick="closeLoadModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="existing-layouts">Choose Layout:</label>
+                    <select id="existing-layouts" size="8">
+                        <!-- Options loaded dynamically -->
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeLoadModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmLoadLayout()">Load Layout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export XML Modal -->
+    <div id="export-modal" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h3>📤 Export XML</h3>
+                <span class="close" onclick="closeExportModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Generated XML:</label>
+                    <textarea id="export-xml" readonly rows="20"></textarea>
+                </div>
+                <div class="form-group">
+                    <small>Copy this XML code and save it as a .xml file, or use the download button below.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="copyXMLToClipboard()">📋 Copy to Clipboard</button>
+                <button class="btn btn-secondary" onclick="downloadXML()">💾 Download XML</button>
+                <button class="btn btn-outline" onclick="closeExportModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Messages -->
+    <div id="status-message" class="status-message"></div>
+
+    <script src="{{ url_for('static', filename='js/editor.js') }}"></script>
+</body>
+</html>

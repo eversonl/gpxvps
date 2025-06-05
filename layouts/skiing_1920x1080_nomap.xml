@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<layout>
+    <!-- Safe layout for 1920x1080 videos - NO MAPS -->
+    <widget x="50" y="50" width="220" height="60" position="left" align="vertical">
+        <type>speed</type>
+        <n>SPEED</n>
+        <margin>10</margin>
+        <padding>5</padding>
+        <unit>kph</unit>
+        <text-shadow>3</text-shadow>
+        <border>2</border>
+        <border-color>#000000b0</border-color>
+        <background-color>#0000004c</background-color>
+    </widget>
+
+    <widget x="50" y="130" width="220" height="60" position="left" align="vertical">
+        <type>elevation</type>
+        <n>ELEVATION</n>
+        <margin>10</margin>
+        <padding>5</padding>
+        <unit>m</unit>
+        <text-shadow>3</text-shadow>
+        <border>2</border>
+        <border-color>#000000b0</border-color>
+        <background-color>#0000004c</background-color>
+    </widget>
+
+    <widget x="1650" y="50" width="220" height="60" position="right" align="vertical">
+        <type>time</type>
+        <n>TIME</n>
+        <margin>10</margin>
+        <padding>5</padding>
+        <text-shadow>3</text-shadow>
+        <border>2</border>
+        <border-color>#000000b0</border-color>
+        <background-color>#0000004c</background-color>
+    </widget>
+
+    <widget x="50" y="210" width="220" height="60" position="left" align="vertical">
+        <type>distance</type>
+        <n>DISTANCE</n>
+        <margin>10</margin>
+        <padding>5</padding>
+        <unit>km</unit>
+        <text-shadow>3</text-shadow>
+        <border>2</border>
+        <border-color>#000000b0</border-color>
+        <background-color>#0000004c</background-color>
+    </widget>
+</layout>

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPX2Video Upload</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            margin-top: 10px;
+            width: auto;
+            margin-right: 10px;
+        }
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        small {
+            color: #666;
+            font-size: 12px;
+            display: block;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎥 GPX2Video Upload</h1>
+        
+        <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="video_file">Upload MP4 file:</label>
+                <input type="file" name="video_file" id="video_file" accept=".mp4">
+                <label for="mp4">Or select existing MP4:</label>
+                <select name="mp4" id="mp4">
+                    <option value="">Select existing MP4...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="gpx_file">Upload GPX file:</label>
+                <input type="file" name="gpx_file" id="gpx_file" accept=".gpx">
+                <label for="gpx">Or select existing GPX:</label>
+                <select name="gpx" id="gpx">
+                    <option value="">Select existing GPX...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="layout">Select Layout:</label>
+                <select name="layout" id="layout" required>
+                    <option value="">Select layout...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="start_time">Start Time (optional):</label>
+                <input type="datetime-local" name="start_time" id="start_time" step="1">
+                <button type="button" class="btn-secondary" id="autoFillTime">Auto-fill from video</button>
+                <small>This should match a timestamp from your GPX file when the video recording started (with seconds)</small>
+            </div>
+
+            <div class="form-group">
+                <label for="offset">Offset (ms):</label>
+                <input type="number" name="offset" id="offset" value="0">
+                <small>If your video starts after the GPX timestamp, enter the difference in milliseconds</small>
+            </div>
+
+            <div class="form-group">
+                <label for="telemetry_method">Telemetry Method:</label>
+                <select name="telemetry_method" id="telemetry_method">
+                    <option value="">Default</option>
+                    <option value="1">Sample</option>
+                    <option value="2">Linear</option>
+                    <option value="3">Interpolate</option>
+                    <option value="4">Kalman</option>
+                </select>
+                <small>Use method 2 or 3 to fix speed calculation issues</small>
+            </div>
+
+            <div class="form-group">
+                <label for="telemetry_rate">Telemetry Rate (ms):</label>
+                <input type="number" name="telemetry_rate" id="telemetry_rate" value="1000" min="20" max="5000">
+                <small>Lower values = smoother interpolation (500-1000ms recommended)</small>
+            </div>
+
+            <button type="submit">🚀 Generate Video</button>
+        </form>
+
+        <div id="status"></div>
+    </div>
+
+    <script>
+        // Load available files
+        function loadFiles() {
+            fetch('/get_files')
+                .then(response => response.json())
+                .then(data => {
+                    const mp4Select = document.getElementById('mp4');
+                    const gpxSelect = document.getElementById('gpx');
+                    const layoutSelect = document.getElementById('layout');
+
+                    // Populate MP4 files
+                    if (data.mp4_files) {
+                        data.mp4_files.forEach(file => {
+                            const option = document.createElement('option');
+                            option.value = file;
+                            option.text = file;
+                            mp4Select.appendChild(option);
+                        });
+                    }
+
+                    // Populate GPX files
+                    if (data.gpx_files) {
+                        data.gpx_files.forEach(file => {
+                            const option = document.createElement('option');
+                            option.value = file;
+                            option.text = file;
+                            gpxSelect.appendChild(option);
+                        });
+                    }
+
+                    // Populate layouts
+                    if (data.layouts) {
+                        data.layouts.forEach(file => {
+                            const option = document.createElement('option');
+                            option.value = file;
+                            option.text = file;
+                            layoutSelect.appendChild(option);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading files:', error);
+                    showStatus('Error loading files: ' + error.message, 'error');
+                });
+        }
+
+        // Get video creation time
+        function getVideoTime(filename) {
+            if (!filename) return;
+            
+            fetch(`/get_video_time?filename=${encodeURIComponent(filename)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.creation_time) {
+                        console.log('Received timestamp from server:', data.creation_time);
+                        
+                        // Ensure the timestamp includes seconds for the datetime-local input
+                        let timestamp = data.creation_time;
+                        if (!timestamp.includes(':') || timestamp.split(':').length < 3) {
+                            // If no seconds, add them
+                            timestamp += ':00';
+                        }
+                        
+                        console.log('Setting input value to:', timestamp);
+                        document.getElementById('start_time').value = timestamp;
+                        showStatus('Auto-filled start time with seconds: ' + timestamp, 'success');
+                    } else if (data.error) {
+                        showStatus('Could not get video creation time: ' + data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    showStatus('Error getting video time: ' + error.message, 'error');
+                });
+        }
+
+        // Show status messages
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = 'status ' + type;
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusDiv.textContent = '';
+                    statusDiv.className = '';
+                }, 5000);
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFiles();
+            
+            // Auto-fill button
+            document.getElementById('autoFillTime').addEventListener('click', function() {
+                const selectedFile = document.getElementById('mp4').value;
+                if (selectedFile) {
+                    getVideoTime(selectedFile);
+                } else {
+                    showStatus('Please select an existing video file first', 'error');
+                }
+            });
+            
+            // File selection handlers
+            document.getElementById('mp4').addEventListener('change', function() {
+                if (this.value) {
+                    document.getElementById('video_file').value = '';
+                    getVideoTime(this.value);
+                }
+            });
+
+            document.getElementById('video_file').addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    document.getElementById('mp4').value = '';
+                }
+            });
+
+            document.getElementById('gpx').addEventListener('change', function() {
+                if (this.value) {
+                    document.getElementById('gpx_file').value = '';
+                }
+            });
+
+            document.getElementById('gpx_file').addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    document.getElementById('gpx').value = '';
+                }
+            });
+
+            // Form validation
+            document.getElementById('uploadForm').addEventListener('submit', function(e) {
+                const videoFile = document.getElementById('video_file').files[0];
+                const videoSelect = document.getElementById('mp4').value;
+                const gpxFile = document.getElementById('gpx_file').files[0];
+                const gpxSelect = document.getElementById('gpx').value;
+                const layout = document.getElementById('layout').value;
+                const startTimeInput = document.getElementById('start_time');
+
+                // Fix start time to ensure seconds are included
+                if (startTimeInput.value) {
+                    let timeValue = startTimeInput.value;
+                    console.log('Original time value:', timeValue);
+                    
+                    // If the value doesn't include seconds, add them
+                    if (timeValue.length === 16) { // Format: 2025-02-19T11:02 (missing seconds)
+                        timeValue += ':00';
+                        startTimeInput.value = timeValue;
+                        console.log('Fixed time value:', timeValue);
+                    }
+                }
+
+                if (!videoFile && !videoSelect) {
+                    e.preventDefault();
+                    showStatus('Please select or upload a video file', 'error');
+                    return;
+                }
+
+                if (!gpxFile && !gpxSelect) {
+                    e.preventDefault();
+                    showStatus('Please select or upload a GPX file', 'error');
+                    return;
+                }
+
+                if (!layout) {
+                    e.preventDefault();
+                    showStatus('Please select a layout', 'error');
+                    return;
+                }
+
+                showStatus('Processing video... This may take a while.', 'success');
+            });
+        });
+    </script>
+</body>
+</html>

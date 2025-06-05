@@ -204,7 +204,7 @@ def upload_file():
             cwd=os.path.dirname(os.path.abspath(__file__))  # Set working directory
         )
         
-        print(f"✓ Command completed successfully")
+        print(f"? Command completed successfully")
         # Only show errors or important info, not the full verbose output
         if result.stderr and "ERROR" in result.stderr:
             print(f"Warnings/Errors: {result.stderr}")

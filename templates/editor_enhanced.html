@@ -1,0 +1,209 @@
+                        <div class="form-group">
+                            <label for="map-relative-position">Relative Position:</label>
+                            <select id="map-relative-position" onchange="updateMapProperty('position', this.value)">
+                                <option value="top-left">Top Left</option>
+                                <option value="top">Top Center</option>
+                                <option value="top-right">Top Right</option>
+                                <option value="left">Middle Left</option>
+                                <option value="center">Center</option>
+                                <option value="right">Middle Right</option>
+                                <option value="bottom-left">Bottom Left</option>
+                                <option value="bottom">Bottom Center</option>
+                                <option value="bottom-right">Bottom Right</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="property-section">
+                        <h5>🗺️ Map Settings</h5>
+                        <div class="form-group">
+                            <label for="map-zoom">Zoom Level:</label>
+                            <input type="number" id="map-zoom" min="1" max="20" value="13" onchange="updateMapProperty('zoom', this.value)">
+                            <small>1 = World view, 20 = Street level</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="map-factor">Scale Factor:</label>
+                            <input type="number" id="map-factor" min="0.5" max="5.0" step="0.1" value="2.0" onchange="updateMapProperty('factor', this.value)">
+                            <small>Map rendering scale multiplier</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="map-margin">Margin:</label>
+                            <input type="number" id="map-margin" min="0" max="100" value="20" onchange="updateMapProperty('margin', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label for="map-marker-size">Marker Size:</label>
+                            <input type="number" id="map-marker-size" min="20" max="200" value="60" onchange="updateMapProperty('marker_size', this.value)">
+                            <small>Size of position markers in pixels</small>
+                        </div>
+                    </div>
+
+                    <div class="property-section">
+                        <h5>🎨 Map Styling</h5>
+                        <div class="form-group">
+                            <label for="map-border-color">Border Color:</label>
+                            <input type="color" id="map-border-color" onchange="updateMapProperty('border_color', this.value + 'cc')">
+                            <input type="number" id="map-border-width" min="0" max="10" value="3" onchange="updateMapProperty('border', this.value)">
+                            <small>Border width (px)</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="map-bg-color">Background:</label>
+                            <input type="color" id="map-bg-color" onchange="updateMapProperty('background_color', this.value + '88')">
+                            <input type="range" id="map-bg-opacity" min="0" max="255" value="136" onchange="updateMapBackgroundOpacity(this.value)">
+                            <small>Background opacity: <span id="map-bg-opacity-value">53%</span></small>
+                        </div>
+                    </div>
+
+                    <div class="property-section">
+                        <h5>🛣️ GPS Track Styling</h5>
+                        <div class="form-group">
+                            <label for="map-path-thick">Path Thickness:</label>
+                            <input type="number" id="map-path-thick" min="1" max="20" step="0.5" value="4.0" onchange="updateMapProperty('path_thick', this.value)">
+                            <small>GPS track line thickness</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="map-path-border">Path Border:</label>
+                            <input type="number" id="map-path-border" min="0" max="10" step="0.5" value="2.0" onchange="updateMapProperty('path_border', this.value)">
+                            <small>Border around GPS track line</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="map-path-color">Path Color:</label>
+                            <input type="color" id="map-path-color" value="#2196f3" onchange="updateMapProperty('path_color', this.value)">
+                            <small>GPS track line color (if supported)</small>
+                        </div>
+                    </div>
+
+                    <div class="property-actions">
+                        <button class="btn btn-danger" onclick="deleteSelectedElement()">🗑️ Delete</button>
+                        <button class="btn btn-outline" onclick="duplicateSelectedElement()">📋 Duplicate</button>
+                        <button class="btn btn-outline" onclick="resetMap()">🔄 Reset</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Modals -->
+    
+    <!-- Save Layout Modal -->
+    <div id="save-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>💾 Save Layout</h3>
+                <span class="close" onclick="closeSaveModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="layout-name">Layout Name:</label>
+                    <input type="text" id="layout-name" placeholder="My Custom Layout" required>
+                </div>
+                <div class="form-group">
+                    <label for="layout-description">Description (optional):</label>
+                    <textarea id="layout-description" rows="3" placeholder="Describe this layout..."></textarea>
+                </div>
+                <div class="form-group">
+                    <small>The layout will be saved as an XML file compatible with gpx2video.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeSaveModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmSaveLayout()">Save Layout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Layout Modal -->
+    <div id="load-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📁 Load Layout</h3>
+                <span class="close" onclick="closeLoadModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="existing-layouts">Choose Layout:</label>
+                    <select id="existing-layouts" size="8">
+                        <!-- Options loaded dynamically -->
+                    </select>
+                </div>
+                <div class="layout-preview" id="layout-preview" style="display: none;">
+                    <h4>Preview:</h4>
+                    <div class="preview-info">
+                        <span id="preview-widgets">0 widgets</span>
+                        <span id="preview-map">No map</span>
+                        <span id="preview-resolution">1920×1080</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeLoadModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmLoadLayout()">Load Layout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export XML Modal -->
+    <div id="export-modal" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h3>📤 Export XML</h3>
+                <span class="close" onclick="closeExportModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="export-stats" id="export-stats">
+                    <span>Widgets: <strong id="export-widget-count">0</strong></span>
+                    <span>Map: <strong id="export-map-status">None</strong></span>
+                    <span>Resolution: <strong id="export-resolution">1920×1080</strong></span>
+                </div>
+                <div class="form-group">
+                    <label>Generated XML:</label>
+                    <textarea id="export-xml" readonly rows="20"></textarea>
+                </div>
+                <div class="form-group">
+                    <small>Copy this XML code and save it as a .xml file, or use the download button below.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="copyXMLToClipboard()">📋 Copy to Clipboard</button>
+                <button class="btn btn-secondary" onclick="downloadXML()">💾 Download XML</button>
+                <button class="btn btn-outline" onclick="closeExportModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Template Modal -->
+    <div id="template-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🎯 Load Activity Template</h3>
+                <span class="close" onclick="closeTemplateModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="template-info" id="template-info">
+                    <h4 id="template-name">Template Name</h4>
+                    <p id="template-description">Template description will appear here</p>
+                    <div class="template-widgets" id="template-widgets">
+                        <strong>Included widgets:</strong>
+                        <ul id="template-widget-list"></ul>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="clear-existing" checked>
+                        Clear existing layout first
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeTemplateModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmLoadTemplate()">Load Template</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Messages -->
+    <div id="status-message" class="status-message"></div>
+
+    <!-- Enhanced JavaScript -->
+    <script src="{{ url_for('static', filename='js/editor_enhanced.js') }}"></script>
+</body>
+</html>

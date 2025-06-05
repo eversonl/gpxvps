@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<layout>
+    <!-- Skiing layout with VISIBLE map positioning for 1920x1080 -->
+    
+    <!-- Speed widget - top left -->
+    <widget x="50" y="50" width="220" height="60" position="left" align="vertical">
+        <type>speed</type>
+        <n>SPEED</n>
+        <margin>10</margin>
+        <padding>5</padding>
+        <unit>kph</unit>
+        <text-shadow>3</text-shadow>
+        <border>2</border>
+        <border-color>#000000b0</border-color>
+        <background-color>#0000004c</background-color>
+    </widget>
+
+    <!-- Elevation widget - below speed -->
+    <widget x="50" y="130" width="220" height="60" position="left" align="vertical">
+        <type>elevation</type>
+        <n>ELEVATION</n>
+        <margin>10</margin>
+        <padding>5</padding>
+        <unit>m</unit>
+        <text-shadow>3</text-shadow>
+        <border>2</border>
+        <border-color>#000000b0</border-color>
+        <background-color>#0000004c</background-color>
+    </widget>
+
+    <!-- Time widget - top right -->
+    <widget x="1650" y="50" width="220" height="60" position="right" align="vertical">
+        <type>time</type>
+        <n>TIME</n>
+        <margin>10</margin>
+        <padding>5</padding>
+        <text-shadow>3</text-shadow>
+        <border>2</border>
+        <border-color>#000000b0</border-color>
+        <background-color>#0000004c</background-color>
+    </widget>
+
+    <!-- Map - PROPERLY positioned using relative positioning -->
+    <map position="bottom-right" display="true">
+        <source>1</source>  <!-- OpenStreetMap -->
+        <zoom>12</zoom>
+        <factor>1.8</factor>
+        <margin>20</margin>
+        <border>5</border>
+        <border-color>#ff0000ff</border-color>  <!-- RED border for testing visibility -->
+        <background-color>#ffffffff</background-color>
+        <path-thick>5.0</path-thick>
+        <path-border>2.5</path-border>
+    </map>
+</layout>

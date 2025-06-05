@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<layout>
+    <!-- Responsive layout for 1920x1080 videos -->
+    <widget x="50" y="50" width="220" height="60" position="left" align="vertical">
+        <type>speed</type>
+        <n>SPEED</n>
+        <margin>10</margin>
+        <padding>5</padding>
+        <unit>kph</unit>
+        <text-shadow>3</text-shadow>
+        <border>2</border>
+        <border-color>#000000b0</border-color>
+        <background-color>#0000004c</background-color>
+    </widget>
+
+    <widget x="50" y="130" width="220" height="60" position="left" align="vertical">
+        <type>elevation</type>
+        <n>ELEVATION</n>
+        <margin>10</margin>
+        <padding>5</padding>
+        <unit>m</unit>
+        <text-shadow>3</text-shadow>
+        <border>2</border>
+        <border-color>#000000b0</border-color>
+        <background-color>#0000004c</background-color>
+    </widget>
+
+    <widget x="1650" y="50" width="220" height="60" position="right" align="vertical">
+        <type>time</type>
+        <n>TIME</n>
+        <margin>10</margin>
+        <padding>5</padding>
+        <text-shadow>3</text-shadow>
+        <border>2</border>
+        <border-color>#000000b0</border-color>
+        <background-color>#0000004c</background-color>
+    </widget>
+
+    <!-- Map in top-right corner - FIXED to use relative positioning -->
+    <map position="top-right" display="true">
+        <source>6</source>
+        <zoom>13</zoom>
+        <factor>2.0</factor>
+        <margin>20</margin>
+        <border>5</border>
+        <border-color>#000000b0</border-color>
+        <background-color>#0000004c</background-color>
+        <path-thick>3.0</path-thick>
+        <path-border>1.5</path-border>
+    </map>
+</layout>

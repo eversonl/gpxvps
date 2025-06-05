@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPX2Video - Enhanced Web Interface</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>🎥 GPX2Video Enhanced Web Interface</h1>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('upload')">📁 Upload & Process</button>
+            <button class="tab" onclick="switchTab('generator')">🎨 Layout Generator</button>
+        </div>
+
+        <!-- Upload Tab -->
+        <div class="tab-content active" id="upload-content">
+            <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
+                <div class="form-grid">
+                    <!-- File Upload Section -->
+                    <div class="form-section file-section">
+                        <h2>📁 Files</h2>
+                        
+                        <div class="form-group">
+                            <label for="video_file">Upload MP4 file:</label>
+                            <input type="file" name="video_file" id="video_file" accept=".mp4">
+                            <label for="mp4">Or select existing MP4:</label>
+                            <select name="mp4" id="mp4">
+                                <option value="">Select existing MP4...</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="gpx_file">Upload GPX file:</label>
+                            <input type="file" name="gpx_file" id="gpx_file" accept=".gpx">
+                            <label for="gpx">Or select existing GPX:</label>
+                            <select name="gpx" id="gpx">
+                                <option value="">Select existing GPX...</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="layout">Select Layout:</label>
+                            <select name="layout" id="layout" required>
+                                <option value="">Select layout...</option>
+                            </select>
+                            <div id="current-layout" class="current-layout" style="display: none;">
+                                <strong>Current Layout:</strong> <span id="layout-name"></span>
+                                <button type="button" class="btn btn-outline" onclick="editCurrentLayout()">Edit in Generator</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Processing Options -->
+                    <div class="form-section">
+                        <h2>⚙️ Processing Options</h2>
+                        
+                        <div class="form-group">
+                            <label for="start_time">Start Time (optional):</label>
+                            <input type="datetime-local" name="start_time" id="start_time" step="1">
+                            <button type="button" class="btn btn-outline" id="autoFillTime">Auto-fill from video</button>
+                            <small>This should match a timestamp from your GPX file when the video recording started</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="offset">Offset (ms):</label>
+                            <input type="number" name="offset" id="offset" value="0">
+                            <small>If your video starts after the GPX timestamp, enter the difference in milliseconds</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="telemetry_method">Telemetry Method:</label>
+                            <select name="telemetry_method" id="telemetry_method">
+                                <option value="">Default</option>
+                                <option value="1">Sample</option>
+                                <option value="2">Linear</option>
+                                <option value="3">Interpolate</option>
+                                <option value="4">Kalman</option>
+                            </select>
+                            <small>Use method 2 or 3 to fix speed calculation issues</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="telemetry_rate">Telemetry Rate (ms):</label>
+                            <input type="number" name="telemetry_rate" id="telemetry_rate" value="1000" min="20" max="5000">
+                            <small>Lower values = smoother interpolation (500-1000ms recommended)</small>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 18px; padding: 15px;">
+                    🚀 Generate Video
+                </button>
+            </form>
+
+            <div id="status"></div>
+        </div>
+        <!-- Layout Generator Tab -->
+        <div class="tab-content" id="generator-content">
+            <div class="form-grid">
+                <!-- Map Configuration -->
+                <div class="form-section">
+                    <h2>🗺️ Map Configuration</h2>
+                    
+                    <div class="form-group">
+                        <label for="mapSource">Map Source</label>
+                        <select id="mapSource">
+                            <option value="0">None</option>
+                            <option value="1" selected>OpenStreetMap</option>
+                            <option value="6">OpenTopoMap</option>
+                            <option value="5">OpenCycleMap</option>
+                        </select>
+                        <small>OpenTopoMap (6) recommended for skiing/snowboarding</small>
+                    </div>
+
+                    <div class="widget-controls">
+                        <div class="form-group">
+                            <label for="mapZoom">Zoom Level</label>
+                            <input type="number" id="mapZoom" value="12" min="1" max="18">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="mapFactor">Scale Factor</label>
+                            <input type="number" id="mapFactor" value="2.0" step="0.1" min="0.5" max="5.0">
+                        </div>
+                    </div>
+
+                    <div class="widget-controls">
+                        <div class="form-group">
+                            <label for="mapWidth">Width (px)</label>
+                            <input type="number" id="mapWidth" value="640" min="100" max="1920">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="mapHeight">Height (px)</label>
+                            <input type="number" id="mapHeight" value="480" min="100" max="1080">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Speed Widget Configuration -->
+                <div class="form-section">
+                    <h2>⚡ Speed Widget</h2>
+                    
+                    <div class="form-group">
+                        <label for="speedUnit">Unit</label>
+                        <select id="speedUnit">
+                            <option value="kph">km/h</option>
+                            <option value="mph">mph</option>
+                        </select>
+                    </div>
+
+                    <div class="widget-controls">
+                        <div class="form-group">
+                            <label for="speedWidth">Width (px)</label>
+                            <input type="number" id="speedWidth" value="220" min="100" max="500">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="speedHeight">Height (px)</label>
+                            <input type="number" id="speedHeight" value="60" min="30" max="150">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="speedPosition">Position</label>
+                        <select id="speedPosition">
+                            <option value="left">Left</option>
+                            <option value="right">Right</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Additional Widgets -->
+                <div class="form-section">
+                    <h2>📊 Additional Widgets</h2>
+                    
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="includeElevation" checked>
+                        <label for="includeElevation">Elevation Widget</label>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="includeTime" checked>
+                        <label for="includeTime">Time Widget</label>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="includeDistance">
+                        <label for="includeDistance">Distance Widget</label>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="includeAvgSpeed">
+                        <label for="includeAvgSpeed">Average Speed Widget</label>
+                    </div>
+                </div>
+
+                <!-- Layout Settings -->
+                <div class="form-section">
+                    <h2>💾 Layout Settings</h2>
+                    
+                    <div class="form-group">
+                        <label for="layoutName">Layout Name</label>
+                        <input type="text" id="layoutName" placeholder="my_custom_layout" value="">
+                        <small>Name for saving your custom layout</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="layout-actions">
+                <button class="btn btn-primary" onclick="generateLayout()">🎨 Generate Layout Preview</button>
+                <button class="btn btn-secondary" onclick="saveLayout()" id="saveLayoutBtn" style="display: none;">💾 Save Layout</button>
+                <button class="btn btn-outline" onclick="useLayoutForProcessing()" id="useLayoutBtn" style="display: none;">✅ Use This Layout</button>
+            </div>
+
+            <!-- Preview Section -->
+            <div class="preview-section">
+                <h2>📄 Generated Layout XML</h2>
+                <div class="xml-output" id="xmlOutput">
+                    Click "Generate Layout Preview" to see the configuration...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/simple.js') }}"></script>
+</body>
+</html>

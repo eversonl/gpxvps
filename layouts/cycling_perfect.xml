@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<layout>
+    <!-- Perfect cycling layout with proper positioning and fonts -->
+    
+    <!-- Speed widget - left side -->
+    <widget x="25" y="45" width="200" height="50" position="left" align="vertical">
+        <type>speed</type>
+        <n>SPEED</n>
+        <margin>15</margin>
+        <padding>8</padding>
+        <unit>kph</unit>
+        <text-shadow>3</text-shadow>
+        <border>2</border>
+        <border-color>#000000b0</border-color>
+        <background-color>#0000004c</background-color>
+        <font-size>24</font-size>
+        <text-linespace>3</text-linespace>
+    </widget>
+
+    <!-- Elevation widget - left side -->
+    <widget x="25" y="45" width="200" height="50" position="left" align="vertical">
+        <type>elevation</type>
+        <n>ELEVATION</n>
+        <margin>15</margin>
+        <padding>8</padding>
+        <unit>m</unit>
+        <text-shadow>3</text-shadow>
+        <border>2</border>
+        <border-color>#000000b0</border-color>
+        <background-color>#0000004c</background-color>
+        <font-size>24</font-size>
+        <text-linespace>3</text-linespace>
+    </widget>
+
+    <!-- Average Speed widget - left side -->
+    <widget x="25" y="45" width="200" height="50" position="left" align="vertical">
+        <type>avgspeed</type>
+        <n>AVG SPEED</n>
+        <margin>15</margin>
+        <padding>8</padding>
+        <unit>kph</unit>
+        <text-shadow>3</text-shadow>
+        <border>2</border>
+        <border-color>#000000b0</border-color>
+        <background-color>#0000004c</background-color>
+        <font-size>22</font-size>
+        <text-linespace>3</text-linespace>
+    </widget>
+
+    <!-- Time widget - right side -->
+    <widget x="25" y="25" width="200" height="40" position="right" align="vertical">
+        <type>time</type>
+        <n>TIME</n>
+        <margin>15</margin>
+        <padding>8</padding>
+        <text-shadow>3</text-shadow>
+        <border>2</border>
+        <border-color>#000000b0</border-color>
+        <background-color>#0000004c</background-color>
+        <font-size>20</font-size>
+        <text-linespace>3</text-linespace>
+    </widget>
+
+    <!-- Distance widget - bottom -->
+    <widget x="25" y="45" width="200" height="40" position="bottom" align="horizontal">
+        <type>distance</type>
+        <n>DISTANCE</n>
+        <margin>15</margin>
+        <padding>8</padding>
+        <unit>km</unit>
+        <text-shadow>3</text-shadow>
+        <border>2</border>
+        <border-color>#000000b0</border-color>
+        <background-color>#0000004c</background-color>
+        <font-size>20</font-size>
+        <text-linespace>3</text-linespace>
+    </widget>
+
+    <!-- Map with OpenCycleMap for cycling -->
+    <map position="top-right" display="true">
+        <source>5</source>  <!-- OpenCycleMap for cycling -->
+        <zoom>13</zoom>
+        <factor>2.2</factor>
+        <margin>25</margin>
+        <border>3</border>
+        <border-color>#000000cc</border-color>
+        <background-color>#ffffff88</background-color>
+        <path-thick>5.0</path-thick>
+        <path-border>2.5</path-border>
+    </map>
+</layout>

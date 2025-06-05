@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPX2Video - Enhanced Web Interface</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/preview.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>🎥 GPX2Video Enhanced Web Interface</h1>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('upload')">📁 Upload & Process</button>
+            <button class="tab" onclick="switchTab('generator')">🎨 Layout Generator</button>
+        </div>
+
+        <!-- Upload Tab -->
+        <div class="tab-content active" id="upload-content">
+            <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
+                <div class="form-grid">
+                    <!-- File Upload Section -->
+                    <div class="form-section file-section">
+                        <h2>📁 Files</h2>
+                        
+                        <div class="form-group">
+                            <label for="video_file">Upload MP4 file:</label>
+                            <input type="file" name="video_file" id="video_file" accept=".mp4">
+                            <label for="mp4">Or select existing MP4:</label>
+                            <select name="mp4" id="mp4">
+                                <option value="">Select existing MP4...</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="gpx_file">Upload GPX file:</label>
+                            <input type="file" name="gpx_file" id="gpx_file" accept=".gpx">
+                            <label for="gpx">Or select existing GPX:</label>
+                            <select name="gpx" id="gpx">
+                                <option value="">Select existing GPX...</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="layout">Select Layout:</label>
+                            <select name="layout" id="layout" required>
+                                <option value="">Select layout...</option>
+                            </select>
+                            <div id="current-layout" class="current-layout" style="display: none;">
+                                <strong>Current Layout:</strong> <span id="layout-name"></span>
+                                <button type="button" class="btn btn-outline" onclick="editCurrentLayout()">Edit in Generator</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Processing Options -->
+                    <div class="form-section">
+                        <h2>⚙️ Processing Options</h2>
+                        
+                        <div class="form-group">
+                            <label for="start_time">Start Time (optional):</label>
+                            <input type="datetime-local" name="start_time" id="start_time" step="1">
+                            <button type="button" class="btn btn-outline" id="autoFillTime">Auto-fill from video</button>
+                            <small>This should match a timestamp from your GPX file when the video recording started (with seconds)</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="offset">Offset (ms):</label>
+                            <input type="number" name="offset" id="offset" value="0">
+                            <small>If your video starts after the GPX timestamp, enter the difference in milliseconds</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="telemetry_method">Telemetry Method:</label>
+                            <select name="telemetry_method" id="telemetry_method">
+                                <option value="">Default</option>
+                                <option value="1">Sample</option>
+                                <option value="2">Linear</option>
+                                <option value="3">Interpolate</option>
+                                <option value="4">Kalman</option>
+                            </select>
+                            <small>Use method 2 or 3 to fix speed calculation issues</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="telemetry_rate">Telemetry Rate (ms):</label>
+                            <input type="number" name="telemetry_rate" id="telemetry_rate" value="1000" min="20" max="5000">
+                            <small>Lower values = smoother interpolation (500-1000ms recommended)</small>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 18px; padding: 15px;">
+                    🚀 Generate Video
+                </button>
+            </form>
+
+            <div id="status"></div>
+        </div>
+        <!-- Layout Generator Tab with Visual Preview -->
+        <div class="tab-content" id="generator-content">
+            <div class="form-grid">
+                <!-- Video Settings -->
+                <div class="form-section">
+                    <h2>📺 Video Settings</h2>
+                    
+                    <div class="form-group">
+                        <label for="videoResolution">Video Resolution</label>
+                        <select id="videoResolution" onchange="updatePreview()">
+                            <option value="1920x1080" selected>1920x1080 (Full HD)</option>
+                            <option value="1280x720">1280x720 (HD)</option>
+                            <option value="3840x2160">3840x2160 (4K)</option>
+                            <option value="2560x1440">2560x1440 (2K)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="activityType">Activity Type</label>
+                        <select id="activityType" onchange="updatePreview()">
+                            <option value="skiing" selected>⛷️ Skiing/Snowboarding</option>
+                            <option value="cycling">🚴 Cycling</option>
+                            <option value="running">🏃 Running</option>
+                            <option value="hiking">🥾 Hiking</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="layoutName">Layout Name</label>
+                        <input type="text" id="layoutName" placeholder="my_custom_layout" value="">
+                        <small>Name for saving your custom layout</small>
+                    </div>
+                </div>
+
+                <!-- Widget Configuration -->
+                <div class="form-section">
+                    <h2>📊 Widget Configuration</h2>
+                    
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="includeSpeed" checked onchange="updatePreview()">
+                        <label for="includeSpeed">Speed Widget</label>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="includeElevation" checked onchange="updatePreview()">
+                        <label for="includeElevation">Elevation Widget</label>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="includeTime" checked onchange="updatePreview()">
+                        <label for="includeTime">Time Widget</label>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="includeDistance" onchange="updatePreview()">
+                        <label for="includeDistance">Distance Widget</label>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="includeMap" checked onchange="updatePreview()">
+                        <label for="includeMap">Include Map</label>
+                    </div>
+
+                    <div class="layout-actions">
+                        <button class="btn btn-primary" onclick="generateLayout()">📄 Generate XML</button>
+                        <button class="btn btn-secondary" onclick="saveLayout()" id="saveLayoutBtn" style="display: none;">💾 Save Layout</button>
+                        <button class="btn btn-outline" onclick="useLayoutForProcessing()" id="useLayoutBtn" style="display: none;">✅ Use This Layout</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visual Preview Section -->
+            <div class="preview-section">
+                <h2>🎨 Visual Layout Preview</h2>
+                <div class="scale-info" id="scaleInfo">
+                    Resolution: <span id="currentResolution">1920x1080</span> | Scale: <span id="currentScale">1.0x</span>
+                </div>
+                
+                <div class="preview-container">
+                    <div class="layout-preview" id="layoutPreview">
+                        <div class="preview-video" id="previewVideo">
+                            <div class="resolution-display" id="resolutionDisplay">1920×1080</div>
+                            <span>Video Preview Area</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Widget Controls Panel -->
+                <div class="widget-controls-panel" id="widgetControls">
+                    <h3>📝 Edit Selected Widget</h3>
+                    <div class="control-row">
+                        <label>X Position:</label>
+                        <input type="number" id="widgetX" min="0" onchange="updateSelectedWidget()">
+                        <label>Y Position:</label>
+                        <input type="number" id="widgetY" min="0" onchange="updateSelectedWidget()">
+                    </div>
+                    <div class="control-row">
+                        <label>Width:</label>
+                        <input type="number" id="widgetWidth" min="50" onchange="updateSelectedWidget()">
+                        <label>Height:</label>
+                        <input type="number" id="widgetHeight" min="30" onchange="updateSelectedWidget()">
+                    </div>
+                    <button class="btn btn-outline" onclick="deselectWidget()">Done Editing</button>
+                </div>
+
+                <!-- XML Output -->
+                <details style="margin-top: 20px;">
+                    <summary><strong>📄 Generated Layout XML</strong></summary>
+                    <div class="xml-output" id="xmlOutput">
+                        Click widgets in the preview above to edit them, or click "Generate XML" to see the code...
+                    </div>
+                </details>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentGeneratedLayout = null;
+        let widgets = [];
+        let selectedWidget = null;
+        let isDragging = false;
+
+        // Tab switching
+        function switchTab(tabName) {
+            console.log('Switching to tab:', tabName);
+            
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            const targetContent = document.getElementById(tabName + '-content');
+            if (targetContent) {
+                targetContent.classList.add('active');
+                console.log('Activated tab content:', tabName);
+            }
+            
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
+
+            // Update preview when switching to generator tab
+            if (tabName === 'generator') {
+                setTimeout(updatePreview, 100);
+            }
+        }
+
+        // Load available files and layouts
+        function loadFiles() {
+            console.log('Loading files...');
+            return fetch('/get_files')
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Files data:', data);
+                    
+                    const mp4Select = document.getElementById('mp4');
+                    const gpxSelect = document.getElementById('gpx');
+                    const layoutSelect = document.getElementById('layout');
+
+                    if (mp4Select && data.mp4_files) {
+                        mp4Select.innerHTML = '<option value="">Select existing MP4...</option>';
+                        data.mp4_files.forEach(file => {
+                            const option = document.createElement('option');
+                            option.value = file;
+                            option.text = file;
+                            mp4Select.appendChild(option);
+                        });
+                        console.log('Loaded MP4 files:', data.mp4_files);
+                    }
+
+                    if (gpxSelect && data.gpx_files) {
+                        gpxSelect.innerHTML = '<option value="">Select existing GPX...</option>';
+                        data.gpx_files.forEach(file => {
+                            const option = document.createElement('option');
+                            option.value = file;
+                            option.text = file;
+                            gpxSelect.appendChild(option);
+                        });
+                        console.log('Loaded GPX files:', data.gpx_files);
+                    }
+
+                    if (layoutSelect && data.layouts) {
+                        layoutSelect.innerHTML = '<option value="">Select layout...</option>';
+                        data.layouts.forEach(file => {
+                            const option = document.createElement('option');
+                            option.value = file;
+                            option.text = file;
+                            layoutSelect.appendChild(option);
+                        });
+                        console.log('Loaded layouts:', data.layouts);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading files:', error);
+                    showStatus('Error loading files: ' + error.message, 'error');
+                });
+        }
